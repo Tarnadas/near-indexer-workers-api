@@ -2,35 +2,27 @@ import { Client } from './driver/postgres'
 
 export default {
   async fetch(request: Request, env, ctx: ExecutionContext) {
-    // Add Cloudflare Access Service Token credentials as global variables, used when Worker
-    // establishes the connection to Cloudflare Tunnel. This ensures only approved services can
-    // connect to your Tunnel.
-    globalThis.CF_CLIENT_ID = env.CF_CLIENT_ID || undefined
-    globalThis.CF_CLIENT_SECRET = env.CF_CLIENT_SECRET || undefined
-    // NOTE: You may omit these values, however your Tunnel will accept traffic from _any_ source
-    // on the Internet which may result in extra load on your database.
-
     try {
-      // Configure the database client and create a connection.
       const client = new Client({
-        user: 'postgres',
-        database: 'postgres',
-        // hostname is the full URL to your pre-created Cloudflare Tunnel, see documentation here:
-        // https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/create-tunnel
-        hostname: 'https://dev.example.com',
-        password: 'password', // use a secret to store passwords
+        user: 'public_readonly',
+        password: 'nearprotocol',
+        database: 'mainnet_explorer',
+        hostname: 'mainnet.db.explorer.indexer.near.dev',
         port: '5432',
       })
+      console.log('connect')
       await client.connect()
+      console.log('connected')
 
-      // Query the database.
-      const param = 42
-      const result = await client.queryObject<
-        number
-      >`SELECT ${param} as answer;`
+      const result = await client.queryObject<string>`
+        select receipt_receiver_account_id as account_id from public.action_receipt_actions
+        where receipt_predecessor_account_id = 'marior.near'
+        and args::json->>'method_name' = 'storage_deposit'
+        offset 10
+        limit 10;
+      `
 
-      // Return result from database.
-      return new Response(JSON.stringify(result.rows[0]))
+      return new Response(JSON.stringify(result))
     } catch (e) {
       return new Response((e as Error).message)
     }

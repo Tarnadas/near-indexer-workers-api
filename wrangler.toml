@@ -1,19 +1,7 @@
-name = "worker-template-postgres"
-type = "javascript"
-account_id = ""
+name = "indexer-api"
 workers_dev = true
-route = ""
-zone_id = ""
+main = "./dist/index.mjs"
 compatibility_date = "2021-10-07"
 
 [build]
-command = "npm install && npm run build && cp ./src/driver/**/*.wasm ./dist"
-
-[build.upload]
-format = "modules"
-main = "./index.mjs"
-dir = "./dist"
-
-[[build.upload.rules]]
-type = "CompiledWasm"
-globs = ["**/*.wasm"]
+command = "yarn install && yarn build && cp ./src/driver/**/*.wasm ./dist"
